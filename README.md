@@ -159,7 +159,6 @@ axure-prototype-skill-pack/
   <tbody>
     <tr>
       <td align="center"><a href="https://github.com/codex"><img src="https://avatars.githubusercontent.com/u/267193182?v=4" width="100px;" alt="Codex"/><br /><sub><b>Codex</b></sub></a><br /><a href="#" title="Code">💻</a></td>
-      <td align="center"><a href="https://github.com/glm"><img src="https://avatars.githubusercontent.com/u/1732805?v=4" width="100px;" alt="GLM"/><br /><sub><b>GLM</b></sub></a><br /><a href="#" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
