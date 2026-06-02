@@ -1,0 +1,19 @@
+{
+  "name": "axure-prototype-skill-pack",
+  "version": "1.0.0",
+  "description": "Claude Code skills and scripts for parsing Axure RP published HTML prototypes and generating static-prototype requirements drafts.",
+  "skills": [
+    "axure-rp-html-ingest",
+    "axure-requirements-doc-writer"
+  ],
+  "scripts": [
+    "scripts/axure/ingest_axure_html.js",
+    "scripts/axure/make_axure_context_pack.js",
+    "scripts/axure/make_requirements_doc.js"
+  ],
+  "defaultMode": "static-prototype",
+  "targetSkillRoot": "~/.claude/skills",
+  "requires": {
+    "node": ">=16"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  // Optional global hint for prototype-analysis category routing.
+  // Merge this into your Claude Code or AI assistant configuration if you want
+  // prototype work to route more consistently.
+  "categories": {
+    "prototype-analysis": {
+      "description": "Published HTML/Axure RP prototype recognition, extraction, context pack generation, and static-prototype requirements drafting."
+    }
+  }
+}
