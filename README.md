@@ -150,6 +150,23 @@ axure-prototype-skill-pack/
 
 适用于 Claude Code、CodeFree 及任何支持 Claude Code skill 格式（`~/.claude/skills/` 下放 `SKILL.md`）的 AI 助手。
 
+## 贡献者
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center"><a href="https://github.com/codex"><img src="https://avatars.githubusercontent.com/u/267193182?v=4" width="100px;" alt="Codex"/><br /><sub><b>Codex</b></sub></a><br /><a href="#" title="Code">💻</a></td>
+      <td align="center"><a href="https://github.com/glm"><img src="https://avatars.githubusercontent.com/u/1732805?v=4" width="100px;" alt="GLM"/><br /><sub><b>GLM</b></sub></a><br /><a href="#" title="Code">💻</a></td>
+    </tr>
+  </tbody>
+</table>
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
 ## 许可证
 
 MIT
