@@ -1,53 +1,73 @@
-# Axure Prototype Skill Pack
+# Axure 原型解析 Skill Pack
 
-Claude Code skills and Node.js scripts for parsing Axure RP published HTML prototypes and generating static-prototype requirements drafts.
+把 Axure RP **本地发布为 HTML** 的原型，交给 AI 助手解析、提取结构，并生成偏业务口径的需求文档初稿。
 
-## What It Does
+> **前提**：你的 Axure RP 文件必须先在 Axure 里「发布到本地」，生成包含 `data/document.js`、`files/*/data.js`、页面 HTML 的导出目录。本工具**不能直接读取 `.rp` / `.rplib` 源文件**。
 
-1. **Parse** Axure RP HTML export packages into structured JSON and Markdown (sitemap, page components, interactions, dynamic panels, repeaters, text hints)
-2. **Generate** per-module context packs for LLM consumption
-3. **Produce** business-oriented requirements documents from parsed prototypes
+---
 
-Default mode is `static-prototype` — treats Axure as static business interface material rather than formal interaction specs. This matches how most real-world Axure prototypes are actually used.
+## 一键安装（发给 AI 助手）
 
-## Quick Start
+把下面这条命令直接发给 Claude Code / CodeFree 等 AI 助手，它会自动完成安装：
 
-### Install Skills
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\install.ps1 -ProjectRoot "D:\YourProject"
+```
+请帮我安装 Axure 原型解析 skill pack：1) 克隆 https://github.com/<your-org>/axure-prototype-skill-pack 到临时目录；2) 把 skills/axure-rp-html-ingest/SKILL.md 和 skills/axure-requirements-doc-writer/SKILL.md 复制到 ~/.claude/skills/ 下对应目录；3) 把 scripts/axure/ 下的三个 .js 文件复制到当前项目的 scripts/axure/ 目录；4) 删除临时克隆目录；5) 运行 node scripts/axure/ingest_axure_html.js 验证脚本能正常执行。安装完成后告诉我。
 ```
 
-This installs two Claude Code skills to `~/.claude/skills/` and copies scripts to your project's `scripts/axure/` directory.
+> **手动安装**：也可以直接运行 `powershell -ExecutionPolicy Bypass -File .\install.ps1 -ProjectRoot "D:\YourProject"`
 
-### Verify Installation
+---
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\verify.ps1 -ProjectRoot "D:\YourProject"
-```
+## 它能做什么
 
-### Use in Claude Code
+1. **解析** Axure RP HTML 导出包 → 结构化 JSON + Markdown（站点地图、页面组件、交互、动态面板、中继器、文本提示）
+2. **生成** 模块级上下文包，供 LLM 压缩上下文使用
+3. **产出** 面向业务的需求文档初稿（PRD、功能说明、测试用例等）
 
-Place your Axure HTML export in your project, then ask Claude Code:
+默认使用 `static-prototype` 模式——把 Axure 原型当作**静态业务界面材料**，而不是正式交互规范。这符合大多数真实 Axure 原型的使用方式。
+
+---
+
+## 前提与约束
+
+| 约束 | 说明 |
+|------|------|
+| **必须本地发布为 HTML** | Axure RP 里「发布 → 本地」，生成 `index.html` + `data/document.js` + `files/*/data.js`。不支持 `.rp` 源文件 |
+| **输入目录只读** | 绝不修改原始 Axure 导出包 |
+| **纯本地处理** | 所有解析在本地完成，无网络请求 |
+| **Node.js >= 16** | 零外部依赖，只用 Node.js 内置模块 |
+| **中文路径支持** | 文件操作兼容中文目录名和文件名 |
+| **不保证 100% 语义还原** | 真实 Axure 原型大多不规范，工具只做尽力提取，不确定内容标记为"需业务确认" |
+| **表格/中继器字段** | 如果 Axure 没有内联数据，脚本只能提示"存在列表/表格区域"，字段需人工补充 |
+| **输出 Markdown** | 最终文档为 Markdown 格式，不生成 Word/PDF |
+
+---
+
+## 使用方式
+
+### 方式一：直接告诉 AI 助手
+
+把 Axure HTML 导出包放到项目目录下，然后对 AI 助手说：
 
 ```
 请分析 inputs/html_export 下的 Axure RP HTML 原型，默认按 static-prototype 模式生成需求文档。
 先解析原型，再输出 outputs/<项目名>_需求文档.md。
+不要把 Axure 底层 action 名称当成正式需求；把它们作为弱交互线索。
 ```
 
-### Run Scripts Manually
+### 方式二：手动运行脚本
 
 ```powershell
-# Parse Axure export
+# 第一步：解析 Axure 导出包
 node scripts/axure/ingest_axure_html.js --input "path/to/html_export"
 
-# Generate requirements document
+# 第二步：生成需求文档
 node scripts/axure/make_requirements_doc.js `
   --input "path/to/html_export" `
   --context "extracted/axure_context.json" `
   --mode static-prototype
 
-# Generate module context pack
+# 可选：生成模块上下文包
 node scripts/axure/make_axure_context_pack.js `
   --context "extracted/axure_context.json" `
   --pages "页面1,页面2" `
@@ -55,74 +75,81 @@ node scripts/axure/make_axure_context_pack.js `
   --output "extracted/packs/module_context_pack.md"
 ```
 
-## Skills
+---
 
-### axure-rp-html-ingest
+## 两种模式
 
-Parses Axure RP HTML export packages into structured context. Produces `axure_context.json`, sitemap, and per-page summaries.
+| 模式 | 说明 |
+|------|------|
+| `static-prototype`（默认） | 把 Axure 当静态业务界面材料。抑制技术噪音（空 label、State1、底层 action 名称），产出业务导向的需求初稿 |
+| `strict` | 把 Axure 当正式交互规范。完整提取所有交互规则、组件详情、确认项 |
 
-**Trigger phrases**: Axure, RP, published HTML prototype, html_export, data/document.js, prototype structure extraction
+**建议**：除非你明确知道设计人员规范使用了 Axure 交互功能，否则用默认的 `static-prototype` 就对了。
 
-### axure-requirements-doc-writer
+---
 
-Converts parsed Axure prototypes into structured requirements documents (PRD, functional specs, test cases). Depends on `axure-rp-html-ingest` output.
-
-**Trigger phrases**: PRD, requirements draft, module requirements, functional specs, page specifications, test cases, handoff document
-
-## Output Structure
+## 输出结构
 
 ```
 extracted/
-├── axure_context.json          # Complete structured context
-├── axure_sitemap.md            # Human-readable sitemap
+├── axure_context.json          # 全量结构化解析产物
+├── axure_sitemap.md            # 站点地图
 ├── pages/
-│   ├── <pageName>.json         # Per-page detailed JSON
-│   └── <pageName>.md           # Per-page Markdown summary
+│   ├── <页面名>.json           # 页面级详细 JSON
+│   └── <页面名>.md             # 页面级 Markdown 摘要
 └── packs/
-    └── <module>_context_pack.md # Per-module context packs
+    └── <模块名>_context_pack.md # 模块级上下文包
 
 outputs/
-└── <project>_<docType>.md      # Generated requirements document
+└── <项目名>_<文档类型>.md      # 最终需求文档
 ```
 
-## Modes
+---
 
-| Mode | Description |
-|------|-------------|
-| `static-prototype` (default) | Treats Axure as static business interface material. Suppresses technical noise (empty labels, State1, raw action names). Produces business-oriented requirements drafts. |
-| `strict` | Treats Axure as formal interaction specification. Full extraction of all interaction rules, component details, and confirmation items. |
+## 包含的 Skills
 
-## Requirements
+### axure-rp-html-ingest
 
-- Node.js >= 16
-- No external npm dependencies (uses only Node.js built-in modules)
+解析 Axure RP HTML 导出包，产出 `axure_context.json`、站点地图、页面摘要。
 
-## Project Structure
+**触发词**：Axure、RP、published HTML prototype、html_export、data/document.js、原型结构提取
+
+### axure-requirements-doc-writer
+
+基于解析产物生成需求文档（PRD、功能说明、测试用例等）。依赖 `axure-rp-html-ingest` 的输出。
+
+**触发词**：PRD、需求文档、模块需求、功能说明、页面规格、测试用例、交接文档
+
+---
+
+## 项目结构
 
 ```
 axure-prototype-skill-pack/
 ├── config/
-│   └── global-prototype-analysis.jsonc   # Optional category routing config
+│   └── global-prototype-analysis.jsonc   # 可选的分类路由配置
 ├── manuals/
-│   ├── HUMAN_MANUAL.md                   # Human-facing usage guide
-│   └── MODEL_MANUAL.md                   # AI model behavior guide
+│   ├── HUMAN_MANUAL.md                   # 人类使用手册
+│   └── MODEL_MANUAL.md                   # AI 模型行为指南
 ├── scripts/axure/
-│   ├── ingest_axure_html.js              # Core Axure HTML parser
-│   ├── make_axure_context_pack.js        # Context pack generator
-│   └── make_requirements_doc.js          # Requirements document generator
+│   ├── ingest_axure_html.js              # 核心 Axure HTML 解析器
+│   ├── make_axure_context_pack.js        # 上下文包生成器
+│   └── make_requirements_doc.js          # 需求文档生成器
 ├── skills/
-│   ├── axure-rp-html-ingest/SKILL.md     # Claude Code skill definition
+│   ├── axure-rp-html-ingest/SKILL.md     # Claude Code skill 定义
 │   └── axure-requirements-doc-writer/SKILL.md
-├── install.ps1                           # Installation script
-├── verify.ps1                            # Verification script
-├── manifest.json                         # Package metadata
+├── install.ps1                           # 安装脚本
+├── verify.ps1                            # 验证脚本
+├── manifest.json                         # 包元数据
 └── README.md
 ```
 
-## Compatibility
+---
 
-Works with Claude Code, CodeFree, and any AI assistant that supports the Claude Code skill format (SKILL.md in `~/.claude/skills/`).
+## 兼容性
 
-## License
+适用于 Claude Code、CodeFree 及任何支持 Claude Code skill 格式（`~/.claude/skills/` 下放 `SKILL.md`）的 AI 助手。
+
+## 许可证
 
 MIT
