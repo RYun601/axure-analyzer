@@ -1,0 +1,18 @@
+{
+  "name": "axure-analyzer",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Analyze Axure RP HTML prototype exports: structure, annotations, rendered UI baseline, and implementation gaps.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "analyze": "node scripts/analyze.js",
+    "render": "node scripts/render_pages.js",
+    "baseline": "node scripts/build_baseline.js"
+  },
+  "dependencies": {
+    "playwright-core": "^1.64.1"
+  }
+}

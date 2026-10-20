@@ -4,7 +4,7 @@
   // prototype work to route more consistently.
   "categories": {
     "prototype-analysis": {
-      "description": "Published HTML/Axure RP prototype recognition, extraction, context pack generation, and static-prototype requirements drafting."
+      "description": "Axure RP HTML prototype analysis: rendered UI baseline, breadcrumb and text geometry, sticky annotation extraction, OCR for image-based prototypes, and implementation gap analysis."
     }
   }
 }

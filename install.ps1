@@ -1,44 +1,48 @@
 param(
   [string]$ProjectRoot = (Get-Location).Path,
-  [string]$SkillsRoot = "$HOME\.claude\skills",
-  [switch]$SkipProjectScripts
+  [string]$SkillsRoot = "",
+  [switch]$InstallDeps
 )
 
 $ErrorActionPreference = "Stop"
 
 $PackRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$SourceSkills = Join-Path $PackRoot "skills"
-$SourceScripts = Join-Path $PackRoot "scripts\axure"
-
-if (-not (Test-Path -LiteralPath $SourceSkills)) {
-  throw "Missing skills directory: $SourceSkills"
+if ([string]::IsNullOrWhiteSpace($SkillsRoot)) {
+  $SkillsRoot = Join-Path $ProjectRoot ".opencode\skills"
 }
 
-New-Item -ItemType Directory -Force -Path $SkillsRoot | Out-Null
+$Destination = Join-Path $SkillsRoot "axure-analyzer"
+New-Item -ItemType Directory -Force -Path $Destination | Out-Null
 
-foreach ($skill in @("axure-rp-html-ingest", "axure-requirements-doc-writer")) {
-  $src = Join-Path $SourceSkills $skill
-  $dst = Join-Path $SkillsRoot $skill
-  if (-not (Test-Path -LiteralPath (Join-Path $src "SKILL.md"))) {
-    throw "Missing SKILL.md for $skill"
-  }
-  New-Item -ItemType Directory -Force -Path $dst | Out-Null
-  Copy-Item -LiteralPath (Join-Path $src "SKILL.md") -Destination (Join-Path $dst "SKILL.md") -Force
-  Write-Host "Installed skill: $dst"
+Copy-Item -LiteralPath (Join-Path $PackRoot "SKILL.md") -Destination (Join-Path $Destination "SKILL.md") -Force
+Copy-Item -LiteralPath (Join-Path $PackRoot "package.json") -Destination (Join-Path $Destination "package.json") -Force
+Copy-Item -LiteralPath (Join-Path $PackRoot "LICENSE") -Destination (Join-Path $Destination "LICENSE") -Force
+
+$SourceScripts = Join-Path $PackRoot "scripts"
+$DestScripts = Join-Path $Destination "scripts"
+New-Item -ItemType Directory -Force -Path $DestScripts | Out-Null
+Copy-Item -Path (Join-Path $SourceScripts "*") -Destination $DestScripts -Recurse -Force
+
+$SourceReferences = Join-Path $PackRoot "references"
+if (Test-Path -LiteralPath $SourceReferences) {
+  $DestReferences = Join-Path $Destination "references"
+  New-Item -ItemType Directory -Force -Path $DestReferences | Out-Null
+  Copy-Item -Path (Join-Path $SourceReferences "*") -Destination $DestReferences -Recurse -Force
 }
 
-if (-not $SkipProjectScripts) {
-  if (-not (Test-Path -LiteralPath $ProjectRoot)) {
-    throw "ProjectRoot does not exist: $ProjectRoot"
+Write-Host "Installed skill: $Destination"
+
+if ($InstallDeps) {
+  Push-Location $Destination
+  try {
+    npm install --omit=dev --no-audit --no-fund
+  } finally {
+    Pop-Location
   }
-  $dstScripts = Join-Path $ProjectRoot "scripts\axure"
-  New-Item -ItemType Directory -Force -Path $dstScripts | Out-Null
-  Copy-Item -LiteralPath (Join-Path $SourceScripts "ingest_axure_html.js") -Destination $dstScripts -Force
-  Copy-Item -LiteralPath (Join-Path $SourceScripts "make_axure_context_pack.js") -Destination $dstScripts -Force
-  Copy-Item -LiteralPath (Join-Path $SourceScripts "make_requirements_doc.js") -Destination $dstScripts -Force
-  Write-Host "Installed project scripts: $dstScripts"
 }
 
 Write-Host ""
-Write-Host "Install complete."
-Write-Host "Verify with: powershell -ExecutionPolicy Bypass -File .\verify.ps1 -ProjectRoot `"$ProjectRoot`""
+Write-Host "Verify with:"
+Write-Host "  node `"$Destination\scripts\analyze.js`" --input `"D:\path\to\axure-export`" --output `"analysis\axure`" --pages `"<page-name>`""
+Write-Host ""
+Write-Host "Note: restart the agent session if the skill is not listed immediately."

@@ -1,19 +1,26 @@
 {
-  "name": "axure-prototype-skill-pack",
-  "version": "1.0.0",
-  "description": "Claude Code skills and scripts for parsing Axure RP published HTML prototypes and generating static-prototype requirements drafts.",
+  "name": "axure-analyzer",
+  "version": "0.2.0",
+  "description": "Analyze Axure RP HTML prototype exports: page structure, breadcrumbs, rendered text geometry, sticky requirement annotations, image-based OCR, interactions, and implementation baselines.",
   "skills": [
-    "axure-rp-html-ingest",
-    "axure-requirements-doc-writer"
+    "axure-analyzer"
   ],
   "scripts": [
+    "scripts/analyze.js",
+    "scripts/render_pages.js",
+    "scripts/build_baseline.js",
+    "scripts/ocr_pages.js",
+    "scripts/ocr_image.py",
     "scripts/axure/ingest_axure_html.js",
     "scripts/axure/make_axure_context_pack.js",
     "scripts/axure/make_requirements_doc.js"
   ],
   "defaultMode": "static-prototype",
-  "targetSkillRoot": "~/.claude/skills",
+  "targetSkillRoot": ".opencode/skills",
   "requires": {
-    "node": ">=16"
+    "node": ">=18",
+    "chrome": "system Chrome or Edge",
+    "npm": "playwright-core",
+    "ocr": "optional: python -m pip install rapidocr_onnxruntime"
   }
 }

@@ -1,42 +1,62 @@
 param(
-  [string]$ProjectRoot = (Get-Location).Path,
-  [string]$SampleInput = ""
+  [string]$SampleInput = "",
+  [string]$Page = "PageName"
 )
 
 $ErrorActionPreference = "Stop"
+$PackRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 Write-Host "Checking Node.js..."
 node --version
 
 Write-Host ""
-Write-Host "Checking skill visibility..."
-$skillsRoot = "$HOME\.claude\skills"
-foreach ($skill in @("axure-rp-html-ingest", "axure-requirements-doc-writer")) {
-  $skillPath = Join-Path $skillsRoot "$skill\SKILL.md"
-  if (Test-Path -LiteralPath $skillPath) {
-    Write-Host "Found skill: $skill -> $skillPath"
+Write-Host "Checking skill files..."
+$required = @(
+  "SKILL.md",
+  "package.json",
+  "scripts\analyze.js",
+  "scripts\render_pages.js",
+  "scripts\build_baseline.js",
+  "scripts\ocr_pages.js",
+  "scripts\ocr_image.py",
+  "scripts\axure\ingest_axure_html.js",
+  "references\pitfalls.md"
+)
+foreach ($file in $required) {
+  $full = Join-Path $PackRoot $file
+  if (Test-Path -LiteralPath $full) {
+    Write-Host "  [ok] $file"
   } else {
-    Write-Host "Missing skill: $skill (expected at $skillPath)"
+    Write-Host "  [missing] $file"
   }
 }
 
-$ingest = Join-Path $ProjectRoot "scripts\axure\ingest_axure_html.js"
-$writer = Join-Path $ProjectRoot "scripts\axure\make_requirements_doc.js"
-
-if (-not (Test-Path -LiteralPath $ingest)) {
-  throw "Missing project script: $ingest"
+Write-Host ""
+Write-Host "Checking dependencies..."
+Push-Location $PackRoot
+try {
+  node -e "require('playwright-core'); console.log('  [ok] playwright-core')"
+} catch {
+  Write-Host "  [missing] playwright-core (run: npm install)"
 }
-if (-not (Test-Path -LiteralPath $writer)) {
-  throw "Missing project script: $writer"
-}
+Pop-Location
 
 Write-Host ""
-Write-Host "Project scripts found."
+Write-Host "Checking optional OCR dependency..."
+try {
+  python -c "import rapidocr_onnxruntime; print('  [ok] rapidocr_onnxruntime')"
+} catch {
+  Write-Host "  [missing] rapidocr_onnxruntime (run: python -m pip install rapidocr_onnxruntime)"
+}
 
 if ($SampleInput) {
   Write-Host ""
-  Write-Host "Running Axure ingest dry-run..."
-  node $ingest --input $SampleInput --max-pages 3 --dry-run
+  Write-Host "Running render smoke test for: $Page"
+  node (Join-Path $PackRoot "scripts\render_pages.js") `
+    --input $SampleInput `
+    --output (Join-Path $PackRoot "output\verify") `
+    --pages $Page `
+    --no-screenshot
 }
 
 Write-Host ""

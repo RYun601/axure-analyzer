@@ -1,171 +1,167 @@
-# Axure 原型解析 Skill Pack
+# Axure Analyzer
 
-把 Axure RP **本地发布为 HTML** 的原型，交给 AI 助手解析、提取结构，并生成偏业务口径的需求文档初稿。
+分析 Axure RP 导出的 HTML 原型，生成**可核对的页面基线**，供 AI 编码助手按原型实现或做实现差距分析。
 
-> **前提**：你的 Axure RP 文件必须先在 Axure 里「发布到本地」，生成包含 `data/document.js`、`files/*/data.js`、页面 HTML 的导出目录。本工具**不能直接读取 `.rp` / `.rplib` 源文件**。
+> Fork 自 [NeroAyase/axure-prototype-skill-pack](https://github.com/NeroAyase/axure-prototype-skill-pack)（MIT）。
+> 本 fork 保留其 Axure HTML 结构解析能力，并增加了真实浏览器渲染、文本几何、面包屑识别和 sticky 需求说明提取。
 
----
+## 相对上游的改动
 
-## 一键安装（发给 AI 助手）
+- 仓库/技能更名为 `axure-analyzer`
+- 新增 `scripts/render_pages.js`：真实浏览器渲染，提取文本节点、bbox、纵向分带、面包屑
+- 新增 `scripts/build_baseline.js`：合并结构解析与渲染结果，生成 `baseline/<页面>.md/json`
+- 新增 `scripts/analyze.js`：一条命令跑完 ingest → render → baseline
+- sticky 注释改为 DOM 级提取，保留 `<p>` / `<ul><li>` 层级，不再受 200 字符截断影响
+- 侧栏文本自动排除，避免污染面包屑；H5 页面不会误判面包屑
+- 新增图片型原型检测与 OCR（默认本地 RapidOCR，可替换为 `glance`）
+- 改写 `install.ps1` 为 OpenCode 项目级安装与依赖安装
 
-把下面这条命令直接发给 Claude Code / CodeFree 等 AI 助手，它会自动完成安装：
+## 它解决什么问题
 
-```
-请帮我安装 Axure 原型解析 skill pack：1) 克隆 https://github.com/<your-org>/axure-prototype-skill-pack 到临时目录；2) 把 skills/axure-rp-html-ingest/SKILL.md 和 skills/axure-requirements-doc-writer/SKILL.md 复制到 ~/.claude/skills/ 下对应目录；3) 把 scripts/axure/ 下的三个 .js 文件复制到当前项目的 scripts/axure/ 目录；4) 删除临时克隆目录；5) 运行 node scripts/axure/ingest_axure_html.js 验证脚本能正常执行。安装完成后告诉我。
-```
+静态解析 Axure 导出的 HTML 不够：
 
-> **手动安装**：也可以直接运行 `powershell -ExecutionPolicy Bypass -File .\install.ps1 -ProjectRoot "D:\YourProject"`
+- 部分文字（例如面包屑中间项“一级菜单 /”）是 JS 运行时注入的，静态 HTML 里没有。
+- “需求说明”是画布外的 sticky 注释，正则会漏掉 `<ul><li>` 子项，长行还会被截断。
+- 面包屑、黑色标题条、筛选行、表头在 HTML 里只是绝对定位的 `div`，没有语义。
 
----
+Axure Analyzer 用真实浏览器渲染，再提取：
 
-## 它能做什么
+- 可见文本节点 + bbox + 颜色 + 字号
+- 按 y 坐标分带：面包屑 / 标题条 / 筛选区 / 表头 / 行
+- Axure 文本容器的段落与嵌套列表结构
+- sticky 注释（“需求说明”）全文
+- `data.js` 中的组件、动态面板、交互
 
-1. **解析** Axure RP HTML 导出包 → 结构化 JSON + Markdown（站点地图、页面组件、交互、动态面板、中继器、文本提示）
-2. **生成** 模块级上下文包，供 LLM 压缩上下文使用
-3. **产出** 面向业务的需求文档初稿（PRD、功能说明、测试用例等）
+## 前提
 
-默认使用 `static-prototype` 模式——把 Axure 原型当作**静态业务界面材料**，而不是正式交互规范。这符合大多数真实 Axure 原型的使用方式。
+- Axure RP 已**发布到本地 HTML**，目录包含：
+  - `data/document.js`
+  - `files/<页面名>/data.js`
+  - `<页面名>.html`
+- Node.js >= 18
+- 系统安装 Chrome 或 Edge（不下载 Playwright 自带浏览器）
+- 不需要 `.rp` 源文件
 
----
+## 安装
 
-## 前提与约束
-
-| 约束 | 说明 |
-|------|------|
-| **必须本地发布为 HTML** | Axure RP 里「发布 → 本地」，生成 `index.html` + `data/document.js` + `files/*/data.js`。不支持 `.rp` 源文件 |
-| **输入目录只读** | 绝不修改原始 Axure 导出包 |
-| **纯本地处理** | 所有解析在本地完成，无网络请求 |
-| **Node.js >= 16** | 零外部依赖，只用 Node.js 内置模块 |
-| **中文路径支持** | 文件操作兼容中文目录名和文件名 |
-| **不保证 100% 语义还原** | 真实 Axure 原型大多不规范，工具只做尽力提取，不确定内容标记为"需业务确认" |
-| **表格/中继器字段** | 如果 Axure 没有内联数据，脚本只能提示"存在列表/表格区域"，字段需人工补充 |
-| **输出 Markdown** | 最终文档为 Markdown 格式，不生成 Word/PDF |
-
----
-
-## 使用方式
-
-### 方式一：直接告诉 AI 助手
-
-把 Axure HTML 导出包放到项目目录下，然后对 AI 助手说：
-
-```
-请分析 inputs/html_export 下的 Axure RP HTML 原型，默认按 static-prototype 模式生成需求文档。
-先解析原型，再输出 outputs/<项目名>_需求文档.md。
-不要把 Axure 底层 action 名称当成正式需求；把它们作为弱交互线索。
+```bash
+npm install
 ```
 
-### 方式二：手动运行脚本
+只安装 `playwright-core`，体积小；渲染时使用系统 Chrome/Edge。
+
+如果 Chrome 不在默认路径，设置：
 
 ```powershell
-# 第一步：解析 Axure 导出包
-node scripts/axure/ingest_axure_html.js --input "path/to/html_export"
-
-# 第二步：生成需求文档
-node scripts/axure/make_requirements_doc.js `
-  --input "path/to/html_export" `
-  --context "extracted/axure_context.json" `
-  --mode static-prototype
-
-# 可选：生成模块上下文包
-node scripts/axure/make_axure_context_pack.js `
-  --context "extracted/axure_context.json" `
-  --pages "页面1,页面2" `
-  --task "任务描述" `
-  --output "extracted/packs/module_context_pack.md"
+$env:AXURE_CHROME_PATH = "C:\Program Files\Google\Chrome\Application\chrome.exe"
 ```
 
----
+## 使用
 
-## 两种模式
-
-| 模式 | 说明 |
-|------|------|
-| `static-prototype`（默认） | 把 Axure 当静态业务界面材料。抑制技术噪音（空 label、State1、底层 action 名称），产出业务导向的需求初稿 |
-| `strict` | 把 Axure 当正式交互规范。完整提取所有交互规则、组件详情、确认项 |
-
-**建议**：除非你明确知道设计人员规范使用了 Axure 交互功能，否则用默认的 `static-prototype` 就对了。
-
----
-
-## 输出结构
-
-```
-extracted/
-├── axure_context.json          # 全量结构化解析产物
-├── axure_sitemap.md            # 站点地图
-├── pages/
-│   ├── <页面名>.json           # 页面级详细 JSON
-│   └── <页面名>.md             # 页面级 Markdown 摘要
-└── packs/
-    └── <模块名>_context_pack.md # 模块级上下文包
-
-outputs/
-└── <项目名>_<文档类型>.md      # 最终需求文档
+```bash
+node scripts/analyze.js \
+  --input "D:/path/to/axure-export" \
+  --output "analysis/axure" \
+  --pages "PageA,PageB"
 ```
 
----
+不传 `--pages` 时分析全部根目录 HTML 页面。
 
-## 包含的 Skills
+> 示例中的 `PageA`、`PageB`、`PageName` 都是占位符；实际值是 `<页面名>.html` 去掉 `.html` 后的页面名。
 
-### axure-rp-html-ingest
+### 图片型原型 + OCR
 
-解析 Axure RP HTML 导出包，产出 `axure_context.json`、站点地图、页面摘要。
+有的 Axure 原型把 UI 做成一张整图（例如某个页面导出为 2000×3805 的 PNG），DOM 里只有注释。此时加 `--ocr`：
 
-**触发词**：Axure、RP、published HTML prototype、html_export、data/document.js、原型结构提取
-
-### axure-requirements-doc-writer
-
-基于解析产物生成需求文档（PRD、功能说明、测试用例等）。依赖 `axure-rp-html-ingest` 的输出。
-
-**触发词**：PRD、需求文档、模块需求、功能说明、页面规格、测试用例、交接文档
-
----
-
-## 项目结构
-
-```
-axure-prototype-skill-pack/
-├── config/
-│   └── global-prototype-analysis.jsonc   # 可选的分类路由配置
-├── manuals/
-│   ├── HUMAN_MANUAL.md                   # 人类使用手册
-│   └── MODEL_MANUAL.md                   # AI 模型行为指南
-├── scripts/axure/
-│   ├── ingest_axure_html.js              # 核心 Axure HTML 解析器
-│   ├── make_axure_context_pack.js        # 上下文包生成器
-│   └── make_requirements_doc.js          # 需求文档生成器
-├── skills/
-│   ├── axure-rp-html-ingest/SKILL.md     # Claude Code skill 定义
-│   └── axure-requirements-doc-writer/SKILL.md
-├── install.ps1                           # 安装脚本
-├── verify.ps1                            # 验证脚本
-├── manifest.json                         # 包元数据
-└── README.md
+```bash
+node scripts/analyze.js \
+  --input "D:/path/to/axure-export" \
+  --output "analysis/axure" \
+  --pages "PageName" \
+  --ocr
 ```
 
----
+默认使用本地 RapidOCR（离线），先安装：
 
-## 兼容性
+```bash
+python -m pip install rapidocr_onnxruntime
+```
 
-适用于 Claude Code、CodeFree 及任何支持 Claude Code skill 格式（`~/.claude/skills/` 下放 `SKILL.md`）的 AI 助手。
+也可改用 `vision-tools` 的 `glance` 或其他 OCR：
 
-## 贡献者
+```bash
+--ocr --ocr-cmd "glance \"{image}\" --ocr"
+--ocr --ocr-cmd "python long_screenshot_ocr.py \"{image}\" -o \"{output}\""
+```
 
-<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
-<!-- prettier-ignore-start -->
-<!-- markdownlint-disable -->
-<table>
-  <tbody>
-    <tr>
-      <td align="center"><a href="https://github.com/codex"><img src="https://avatars.githubusercontent.com/u/267193182?v=4" width="100px;" alt="Codex"/><br /><sub><b>Codex</b></sub></a><br /><a href="#" title="Code">💻</a></td>
-    </tr>
-  </tbody>
-</table>
-<!-- markdownlint-restore -->
-<!-- prettier-ignore-end -->
-<!-- ALL-CONTRIBUTORS-LIST:END -->
+OCR 结果写入 `ocr/<页面>.md`，并合并进 `baseline/<页面>.md` 的 `## UI OCR` 小节。OCR 只补 UI 文字，不替代 `需求说明` 的业务规则。
+
+### 参数
+
+| 参数 | 默认 | 说明 |
+| --- | --- | --- |
+| `--input` | 必填 | Axure HTML 导出目录 |
+| `--output` | `analysis` | 输出目录 |
+| `--pages a,b` | 全部 | 页面名（不带 `.html`） |
+| `--viewport` | `1920x1080` | 渲染视口 |
+| `--chrome` | 自动检测 | Chrome/Edge 路径 |
+| `--timeout` | `30000` | 页面加载超时（ms） |
+| `--skip-ingest` | 否 | 跳过 `data.js` 结构解析 |
+| `--skip-render` | 否 | 跳过浏览器渲染 |
+| `--skip-baseline` | 否 | 只生成中间产物 |
+
+## 输出
+
+```text
+analysis/axure/
+├── extracted/                 # data.js：站点地图、组件、交互
+├── rendered/<页面>.json       # 渲染后的文本节点、bbox、分带、面包屑、注释
+├── screenshots/<页面>.png     # 画布截图
+├── ocr/<页面>.md              # 图片型原型的 OCR 结果
+├── baseline/<页面>.md         # 页面基线（推荐先读）
+└── baseline/<页面>.json       # 机器可读基线
+```
+
+`baseline/<页面>.md` 包含：
+
+1. 页面信息与画布尺寸
+2. 面包屑（文本 + Axure ID + bbox + 置信度）
+3. 页面纵向分带（每行文本）
+4. 需求说明（sticky 注释全文，含 `<li>` 子项和层级）
+5. 交互（来自 `data.js`）
+6. 使用提示
+
+## 作为 Agent Skill 使用
+
+项目级安装（OpenCode 会读取 `.opencode/skills`）：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1 `
+  -ProjectRoot "D:\path\to\project" `
+  -InstallDeps
+```
+
+安装后目录：
+
+```text
+<project>/.opencode/skills/axure-analyzer/
+├── SKILL.md
+├── package.json
+├── scripts/
+└── references/
+```
+
+安装后，AI 在遇到 Axure / 原型分析任务时会加载 `SKILL.md`，并按其中的流程执行。若当前会话没有立即出现该 skill，重新打开会话即可。
+
+## 已知边界
+
+- 只支持 Axure HTML 导出，不直接读 `.rp`
+- 需要系统 Chrome/Edge
+- 动态面板/中继器只能提取 `data.js` 中已有的结构；没有内联数据的表格字段仍需结合截图确认
+- sticky 注释保留段落和列表层级；图片、表格型注释只保留文本
+- 输入目录始终只读
 
 ## 许可证
 
-MIT
+MIT。原项目版权归 NeroAyase；本 fork 的修改部分归本项目贡献者。
+本项目与 Axure Software Solutions 无关联。
