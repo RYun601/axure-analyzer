@@ -1,16 +1,16 @@
 ---
 name: axure-analyzer
-description: 分析 Axure RP 导出的 HTML 原型，提取页面结构、面包屑、文本几何、sticky 需求说明和交互，生成可供开发对照的页面基线。当任务涉及 Axure、published HTML prototype、data/document.js、files/*/data.js、原型需求说明、面包屑/UI 结构核对，或需要把当前实现与原型逐项对比时使用。
+description: 分析 Axure RP 导出的 HTML 原型，提取页面结构、面包屑、文本几何、sticky 需求说明和交互，生成模型可读、可检索的结构化页面基线。当任务涉及 Axure、published HTML prototype、data/document.js、files/*/data.js、原型需求说明、面包屑/UI 结构核对，或需要把当前实现与原型逐项对比时使用。
 ---
 
 # Axure Analyzer
 
-把 Axure RP 导出的 HTML 原型转成**可核对的页面基线**，而不是只看静态 HTML 文本。
+把 Axure RP 导出的 HTML 原型转成**模型可读、可检索的结构化页面基线**，而不是只看静态 HTML 文本。
 
 ## 何时使用
 
 - 用户要求“按原型实现/重构某个页面”
-- 需要确认面包屑、筛选区、表头、按钮、弹窗等 UI 结构
+- 需要核对面包屑、筛选区、表头、按钮、弹窗等 UI 结构
 - 需要读取原型里的“需求说明”注释（sticky 便签）
 - 需要把当前代码实现与原型做差距分析
 - 任务提到 Axure、原型 HTML、`data/document.js`、`files/*/data.js`
@@ -92,7 +92,7 @@ analysis/axure/
 ├── extracted/                 # data.js 结构：站点地图、组件、交互
 ├── rendered/<页面>.json       # 渲染后的文本节点、bbox、分带、面包屑、注释
 ├── screenshots/<页面>.png     # 画布截图
-├── ocr/<页面>.md              # 图片型原型的 OCR 结果
+├── ocr/<页面>.md              # 启用 --ocr 时生成
 ├── baseline/<页面>.md         # 给人和 LLM 看的页面基线
 └── baseline/<页面>.json       # 机器可读基线
 ```
@@ -118,15 +118,15 @@ analysis/axure/
 
 ## 实现差距分析
 
-拿到基线后，按以下顺序对照当前代码：
+拿到基线后，按当前项目的实际目录对照实现，通常按以下顺序：
 
-1. 路由：`app/Manage/Config/RouteArray.php`
-2. 控制器：`app/Manage/Controllers/...`
-3. 视图：`app/Manage/Views/...`
-4. 样式：`public/theme/manage/css/override.css`
-5. 权限/菜单：`app/Manage/Config/Menu.php`、`app/Manage/Libraries/Permission.php`
+1. 路由/入口
+2. 控制器/请求处理
+3. 视图/模板
+4. 样式
+5. 权限/菜单
 
-输出四类差距：
+具体文件路径以当前项目为准，不要照搬示例路径。输出四类差距：
 
 | 类型 | 含义 |
 | --- | --- |

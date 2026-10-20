@@ -2,7 +2,7 @@
   "name": "axure-analyzer",
   "version": "0.2.0",
   "private": true,
-  "description": "Analyze Axure RP HTML prototype exports: structure, annotations, rendered UI baseline, and implementation gaps.",
+  "description": "Analyze Axure RP HTML prototype exports: structure, annotations, rendered UI, and model-readable page baselines.",
   "license": "MIT",
   "engines": {
     "node": ">=18"

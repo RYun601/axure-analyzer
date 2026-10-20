@@ -1,7 +1,7 @@
 {
   "name": "axure-analyzer",
   "version": "0.2.0",
-  "description": "Analyze Axure RP HTML prototype exports: page structure, breadcrumbs, rendered text geometry, sticky requirement annotations, image-based OCR, interactions, and implementation baselines.",
+  "description": "Analyze Axure RP HTML prototype exports: page structure, breadcrumbs, rendered text geometry, sticky requirement annotations, image-based OCR, interactions, and model-readable page baselines.",
   "skills": [
     "axure-analyzer"
   ],

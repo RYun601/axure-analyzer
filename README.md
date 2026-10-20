@@ -1,6 +1,6 @@
 # Axure Analyzer
 
-Axure Analyzer 将 Axure RP 导出的 HTML 原型转换为可核对的页面基线，覆盖页面结构、面包屑、文本几何、sticky 需求说明、图片型原型 OCR 和交互信息。它面向需要按原型实现或进行实现差距分析的 AI 编码助手。
+Axure Analyzer 将 Axure RP 导出的 HTML 原型转换为模型可读、可检索的结构化页面基线，覆盖页面结构、运行时文本与几何、sticky 需求说明、图片型原型 OCR 和交互信息。它解决 Axure 导出页面依赖 JS 运行时、静态 HTML 难以被模型直接理解的问题，让模型先看清原型，再据此实现页面或对照当前代码。
 
 本项目 fork 自 [NeroAyase/axure-prototype-skill-pack](https://github.com/NeroAyase/axure-prototype-skill-pack)（MIT），保留其 Axure HTML 结构解析能力，并补充真实浏览器渲染、几何分组和注释提取。
 
@@ -47,7 +47,7 @@ cd axure-analyzer
 bash ./install.sh --skills-root "$HOME/.agents/skills" --install-deps
 ```
 
-安装后，OpenCode、Codex、Cursor、Gemini CLI 会从 `~/.agents/skills` 发现该 skill。Claude Code 默认读取 `~/.claude/skills`，接入方式见 [docs/INSTALL.md](docs/INSTALL.md)。
+安装后，支持 Agent Skills 的工具通常可以从 `~/.agents/skills` 发现该 skill（不同工具的全局路径以各自文档为准）。Claude Code 默认读取 `~/.claude/skills`，接入方式见 [docs/INSTALL.md](docs/INSTALL.md)。
 
 > 安装脚本会清理 `node_modules` 中依赖自带的 `SKILL.md`（如 `playwright-core` 的 `lib/tools/skills`），避免被 OpenCode 识别成额外技能。同一个 skill 只需安装一份；多端共用时建议用 junction/symlink 指向主副本，不要复制出多份。
 
@@ -105,7 +105,7 @@ analysis/axure/
 ├── extracted/                 # data.js 结构：站点地图、组件、交互
 ├── rendered/<页面>.json       # 渲染后的文本节点、bbox、分带、面包屑、注释
 ├── screenshots/<页面>.png     # 页面截图
-├── ocr/<页面>.md              # 图片型原型的 OCR 结果
+├── ocr/<页面>.md              # 启用 --ocr 时生成
 ├── baseline/<页面>.md         # 页面基线，推荐首先阅读
 └── baseline/<页面>.json       # 机器可读基线
 ```
@@ -114,9 +114,9 @@ analysis/axure/
 
 ## 工作方式
 
-分析分为三层。首先解析 `data.js`，获取站点地图、组件树、动态面板和交互；随后用真实浏览器渲染页面，提取文本节点、bbox、颜色、字号，并按纵向位置还原面包屑、标题条、筛选区和表头；最后从 DOM 中提取 sticky 注释，保留段落和嵌套列表结构。
+分析分为三步：先解析 `data.js`，获取站点地图、组件树、动态面板和交互；再用真实浏览器渲染页面，提取文本节点、bbox、颜色、字号，按纵向位置划分页面区域，并辅助识别面包屑、标题、筛选区和表头；最后把结构、渲染结果、sticky 注释和可选 OCR 文本合并为 `baseline/<页面>.md` 与 `.json`。
 
-对于 UI 主体是整张图片的 Axure 页面，DOM 中几乎没有可提取的界面文本。此时分析结果会标记 `imageBased: true`，并通过 `--ocr` 调用本地 RapidOCR 补充表头、字段和按钮文字。OCR 结果只用于补全 UI 文本，业务规则仍以 sticky 注释为准。
+对于 UI 主体是整张图片的 Axure 页面，DOM 中几乎没有可提取的界面文本。此时分析结果会标记 `imageBased: true`，并通过 `--ocr` 调用本地 RapidOCR 补充界面文字（如表头、字段、按钮）。OCR 结果只用于补全 UI 文本，业务规则仍以 sticky 注释为准。
 
 ## 边界
 

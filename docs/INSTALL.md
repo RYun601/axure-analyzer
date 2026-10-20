@@ -22,7 +22,7 @@
 
 ## 推荐：安装到 `~/.agents/skills`
 
-OpenCode、Codex、Cursor、Gemini CLI 都会读取 `~/.agents/skills`，适合作为主副本。
+多数支持 Agent Skills 的工具（如 OpenCode、Codex、Cursor、Gemini CLI）通常可以从 `~/.agents/skills` 发现 skill，具体以各工具版本文档为准；适合作为主副本。
 
 > 同一个 skill 只需安装一份。不要把同一份 skill 同时复制到多个全局目录；需要多端共用时，用 junction/symlink 指向主副本。安装脚本会自动清理依赖自带的 `SKILL.md`，避免被 OpenCode 当作额外技能。
 
