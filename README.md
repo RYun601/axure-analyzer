@@ -12,9 +12,22 @@ Axure Analyzer 将 Axure RP 导出的 HTML 原型转换为可核对的页面基�
 
 ## 安装
 
+### 一键安装（发给 AI 助手）
+
+把下面这段发给支持终端操作的 AI 助手：
+
+> 请把 `https://github.com/RYun601/axure-analyzer.git` 克隆到临时目录，进入仓库后按当前操作系统全局安装到 `~/.agents/skills`：
+>
+> - Windows：`powershell -ExecutionPolicy Bypass -File .\install.ps1 -SkillsRoot "$HOME\.agents\skills" -InstallDeps`
+> - macOS：`bash ./install.sh --skills-root "$HOME/.agents/skills" --install-deps`
+>
+> 安装后运行 `node "$HOME/.agents/skills/axure-analyzer/scripts/render_pages.js" --input "<原型目录>" --output "<临时目录>" --pages "<页面名>" --no-screenshot` 验证；如果用户没有提供原型目录，只确认 `SKILL.md` 和依赖安装成功。使用 Claude Code 时，再创建 `~/.claude/skills/axure-analyzer` 指向 `~/.agents/skills/axure-analyzer` 的链接（Windows 用 junction，macOS 用 symlink）。完成后删除临时目录。
+
 ### 全局安装
 
-推荐安装到跨 agent 的 `~/.agents/skills`：
+推荐安装到跨 agent 的 `~/.agents/skills`。
+
+Windows：
 
 ```powershell
 git clone https://github.com/RYun601/axure-analyzer.git
@@ -25,11 +38,22 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 `
   -InstallDeps
 ```
 
+macOS：
+
+```bash
+git clone https://github.com/RYun601/axure-analyzer.git
+cd axure-analyzer
+
+bash ./install.sh --skills-root "$HOME/.agents/skills" --install-deps
+```
+
 安装后，OpenCode、Codex、Cursor、Gemini CLI 会从 `~/.agents/skills` 发现该 skill。Claude Code 默认读取 `~/.claude/skills`，接入方式见 [docs/INSTALL.md](docs/INSTALL.md)。
 
 ### 项目安装
 
 如果希望 skill 只对当前项目生效：
+
+Windows：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\install.ps1 `
@@ -37,7 +61,13 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 `
   -InstallDeps
 ```
 
-安装目录为 `<project>/.opencode/skills/axure-analyzer`。`-InstallDeps` 会在目标目录执行 `npm install`。
+macOS：
+
+```bash
+bash ./install.sh --project-root "/path/to/project" --install-deps
+```
+
+安装目录为 `<project>/.opencode/skills/axure-analyzer`。`-InstallDeps` / `--install-deps` 会在目标目录执行 `npm install`。
 
 其他 agent 的 skills 目录差异见 [docs/INSTALL.md](docs/INSTALL.md)。
 

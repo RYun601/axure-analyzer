@@ -6,6 +6,8 @@
 > 本仓库目前是单 skill，没有发布插件市场。下面的安装方式以 Agent Skills 目录为主；需要 `/plugin install` 的市场安装需要额外发布插件清单。
 >
 > 命令以 `RYun601/axure-analyzer` 为例；fork 后替换成你的仓库地址。
+>
+> 如果希望交给 AI 助手代为安装，直接使用 README 的「一键安装（发给 AI 助手）」段落即可。
 
 ## 路径速查
 
@@ -33,17 +35,13 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 `
   -InstallDeps
 ```
 
-### macOS / Linux
+### macOS
 
 ```bash
 git clone https://github.com/RYun601/axure-analyzer.git
 cd axure-analyzer
 
-DEST="$HOME/.agents/skills/axure-analyzer"
-mkdir -p "$DEST"
-cp SKILL.md README.md LICENSE package.json "$DEST"/
-cp -R scripts references "$DEST"/
-(cd "$DEST" && npm install --omit=dev)
+bash ./install.sh --skills-root "$HOME/.agents/skills" --install-deps
 ```
 
 ### Claude Code 额外链接
@@ -59,7 +57,7 @@ New-Item -ItemType Junction `
   -Target "$HOME\.agents\skills\axure-analyzer"
 ```
 
-macOS / Linux：
+macOS：
 
 ```bash
 mkdir -p ~/.claude/skills
@@ -72,14 +70,30 @@ ln -s ~/.agents/skills/axure-analyzer ~/.claude/skills/axure-analyzer
 
 个人级：
 
+Windows：
+
 ```powershell
 .\install.ps1 -SkillsRoot "$HOME\.claude\skills" -InstallDeps
 ```
 
+macOS：
+
+```bash
+bash ./install.sh --skills-root "$HOME/.claude/skills" --install-deps
+```
+
 项目级：
+
+Windows：
 
 ```powershell
 .\install.ps1 -ProjectRoot "D:\path\to\project" -InstallDeps
+```
+
+macOS：
+
+```bash
+bash ./install.sh --project-root "/path/to/project" --install-deps
 ```
 
 安装后路径：
@@ -94,14 +108,30 @@ ln -s ~/.agents/skills/axure-analyzer ~/.claude/skills/axure-analyzer
 
 项目级（默认）：
 
+Windows：
+
 ```powershell
 .\install.ps1 -ProjectRoot "D:\path\to\project" -InstallDeps
 ```
 
+macOS：
+
+```bash
+bash ./install.sh --project-root "/path/to/project" --install-deps
+```
+
 全局：
+
+Windows：
 
 ```powershell
 .\install.ps1 -SkillsRoot "$HOME\.config\opencode\skills" -InstallDeps
+```
+
+macOS：
+
+```bash
+bash ./install.sh --skills-root "$HOME/.config/opencode/skills" --install-deps
 ```
 
 安装后路径：
@@ -116,15 +146,32 @@ ln -s ~/.agents/skills/axure-analyzer ~/.claude/skills/axure-analyzer
 
 Codex 扫描仓库内的 `.agents/skills`。推荐安装到用户级：
 
+Windows：
+
 ```powershell
 .\install.ps1 -SkillsRoot "$HOME\.agents\skills" -InstallDeps
 ```
 
+macOS：
+
+```bash
+bash ./install.sh --skills-root "$HOME/.agents/skills" --install-deps
+```
+
 项目级：
+
+Windows：
 
 ```powershell
 # 在项目根目录执行
 .\install.ps1 -SkillsRoot ".agents\skills" -InstallDeps
+```
+
+macOS：
+
+```bash
+# 在项目根目录执行
+bash ./install.sh --skills-root ".agents/skills" --install-deps
 ```
 
 验证：在 Codex CLI 中使用 `/skills`，或输入 `$` 选择 skill。
@@ -139,8 +186,16 @@ Cursor 会读取：
 
 推荐安装到 `~/.agents/skills`：
 
+Windows：
+
 ```powershell
 .\install.ps1 -SkillsRoot "$HOME\.agents\skills" -InstallDeps
+```
+
+macOS：
+
+```bash
+bash ./install.sh --skills-root "$HOME/.agents/skills" --install-deps
 ```
 
 验证：Cursor Settings → Rules → Skills，或在 Agent 中输入 `/` 搜索 `axure-analyzer`。
@@ -154,8 +209,16 @@ Gemini CLI 会读取：
 
 推荐安装到 `~/.agents/skills`：
 
+Windows：
+
 ```powershell
 .\install.ps1 -SkillsRoot "$HOME\.agents\skills" -InstallDeps
+```
+
+macOS：
+
+```bash
+bash ./install.sh --skills-root "$HOME/.agents/skills" --install-deps
 ```
 
 也可以使用 Gemini CLI 自带命令（以本机版本为准）：
@@ -195,11 +258,20 @@ node scripts/analyze.js --input "D:/path/to/axure-export" --output "analysis/axu
 
 ## 更新
 
-更新主副本后，重新执行安装命令即可：
+更新主副本后，重新执行安装命令即可。
+
+Windows：
 
 ```powershell
 git pull
 .\install.ps1 -SkillsRoot "$HOME\.agents\skills" -InstallDeps
+```
+
+macOS：
+
+```bash
+git pull
+bash ./install.sh --skills-root "$HOME/.agents/skills" --install-deps
 ```
 
 如果 Claude Code 使用 junction/symlink，不需要重复复制。
@@ -211,4 +283,4 @@ git pull
 - `npm install`（安装 `playwright-core`）
 - OCR 可选：`python -m pip install rapidocr_onnxruntime`
 
-`install.ps1 -InstallDeps` 会自动在目标 skill 目录执行 `npm install`。
+`install.ps1 -InstallDeps` 或 `install.sh --install-deps` 会自动在目标 skill 目录执行 `npm install`。
