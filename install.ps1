@@ -1,3 +1,20 @@
+<#
+.SYNOPSIS
+Install the axure-analyzer skill.
+
+.DESCRIPTION
+By default installs to <ProjectRoot>/.opencode/skills/axure-analyzer.
+Use -SkillsRoot to install to a global or custom skills directory, e.g.
+  $HOME/.agents/skills          (cross-agent: OpenCode / Codex / Cursor / Gemini CLI)
+  $HOME/.config/opencode/skills (OpenCode global)
+  $HOME/.claude/skills          (Claude Code global)
+
+.EXAMPLE
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -ProjectRoot "D:\path\to\project" -InstallDeps
+
+.EXAMPLE
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -SkillsRoot "$HOME\.config\opencode\skills" -InstallDeps
+#>
 param(
   [string]$ProjectRoot = (Get-Location).Path,
   [string]$SkillsRoot = "",

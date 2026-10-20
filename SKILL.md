@@ -25,7 +25,7 @@ description: 分析 Axure RP 导出的 HTML 原型，提取页面结构、面包
 
 ## 一键分析
 
-在本 skill 目录下执行（项目安装时路径为 `.opencode/skills/axure-analyzer/`）：
+在本 skill 目录下执行（安装位置以 skill 的 base directory 为准：项目级 `.opencode/skills`、全局 `~/.agents/skills` 或 `~/.claude/skills` 均可）：
 
 ```bash
 node scripts/analyze.js \
