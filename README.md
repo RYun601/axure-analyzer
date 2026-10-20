@@ -49,6 +49,8 @@ bash ./install.sh --skills-root "$HOME/.agents/skills" --install-deps
 
 安装后，OpenCode、Codex、Cursor、Gemini CLI 会从 `~/.agents/skills` 发现该 skill。Claude Code 默认读取 `~/.claude/skills`，接入方式见 [docs/INSTALL.md](docs/INSTALL.md)。
 
+> 安装脚本会清理 `node_modules` 中依赖自带的 `SKILL.md`（如 `playwright-core` 的 `lib/tools/skills`），避免被 OpenCode 识别成额外技能。同一个 skill 只需安装一份；多端共用时建议用 junction/symlink 指向主副本，不要复制出多份。
+
 ### 项目安装
 
 如果希望 skill 只对当前项目生效：

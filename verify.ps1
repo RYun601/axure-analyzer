@@ -32,6 +32,22 @@ foreach ($file in $required) {
 }
 
 Write-Host ""
+Write-Host "Checking skill frontmatter..."
+$skillPath = Join-Path $PackRoot "SKILL.md"
+$skillText = Get-Content -LiteralPath $skillPath -Raw -Encoding UTF8
+if ($skillText -match '(?m)^name:\s*axure-analyzer\s*$') {
+  Write-Host "  [ok] name: axure-analyzer"
+} else {
+  Write-Host "  [invalid] name must be 'axure-analyzer' (lowercase, matches directory)"
+}
+$nestedSkills = Get-ChildItem -LiteralPath (Join-Path $PackRoot "node_modules") -Recurse -Filter "SKILL.md" -ErrorAction SilentlyContinue
+if ($nestedSkills) {
+  Write-Host "  [invalid] nested SKILL.md found under node_modules (run scripts/strip-node-modules-skills.js)"
+} else {
+  Write-Host "  [ok] no nested SKILL.md under node_modules"
+}
+
+Write-Host ""
 Write-Host "Checking dependencies..."
 Push-Location $PackRoot
 try {

@@ -1,5 +1,5 @@
 ---
-name: Axure Analyzer
+name: axure-analyzer
 description: 分析 Axure RP 导出的 HTML 原型，提取页面结构、面包屑、文本几何、sticky 需求说明和交互，生成可供开发对照的页面基线。当任务涉及 Axure、published HTML prototype、data/document.js、files/*/data.js、原型需求说明、面包屑/UI 结构核对，或需要把当前实现与原型逐项对比时使用。
 ---
 
@@ -25,7 +25,7 @@ description: 分析 Axure RP 导出的 HTML 原型，提取页面结构、面包
 
 ## 一键分析
 
-在本 skill 目录下执行（安装位置以 skill 的 base directory 为准：项目级 `.opencode/skills`、全局 `~/.agents/skills` 或 `~/.claude/skills` 均可）：
+在本 skill 目录下执行（安装位置以 skill 的 base directory 为准：项目级 `.opencode/skills`、全局 `~/.agents/skills`、`~/.config/opencode/skills` 或 `~/.claude/skills` 均可）：
 
 ```bash
 node scripts/analyze.js \

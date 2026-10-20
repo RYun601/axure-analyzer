@@ -73,6 +73,15 @@ if [ "$INSTALL_DEPS" -eq 1 ]; then
   (cd "$DEST" && npm install --omit=dev --no-audit --no-fund)
 fi
 
+# npm dependencies may ship their own SKILL.md (for example playwright-core's
+# lib/tools/skills). OpenCode treats those as separate skills, so clean them up.
+if [ -d "$DEST/node_modules" ]; then
+  node "$DEST/scripts/strip-node-modules-skills.js"
+fi
+
 echo "Installed skill: $DEST"
 echo "Verify with:"
 echo "  node \"$DEST/scripts/analyze.js\" --input \"D:/path/to/axure-export\" --output \"analysis/axure\" --pages \"PageName\""
+echo ""
+echo "Note: if the skill is not listed immediately, restart the agent session."
+echo "      OpenChamber users: run 'OpenChamber: Restart API' or reload the VS Code window; do not kill the OpenCode backend process."

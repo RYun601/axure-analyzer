@@ -8,6 +8,7 @@
     "node": ">=18"
   },
   "scripts": {
+    "postinstall": "node scripts/strip-node-modules-skills.js",
     "analyze": "node scripts/analyze.js",
     "render": "node scripts/render_pages.js",
     "baseline": "node scripts/build_baseline.js"

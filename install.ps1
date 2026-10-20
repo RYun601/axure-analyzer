@@ -58,8 +58,15 @@ if ($InstallDeps) {
   }
 }
 
+# npm dependencies may ship their own SKILL.md (for example playwright-core's
+# lib/tools/skills). OpenCode treats those as separate skills, so clean them up.
+if (Test-Path -LiteralPath (Join-Path $Destination "node_modules")) {
+  node (Join-Path $Destination "scripts\strip-node-modules-skills.js")
+}
+
 Write-Host ""
 Write-Host "Verify with:"
 Write-Host "  node `"$Destination\scripts\analyze.js`" --input `"D:\path\to\axure-export`" --output `"analysis\axure`" --pages `"<page-name>`""
 Write-Host ""
-Write-Host "Note: restart the agent session if the skill is not listed immediately."
+Write-Host "Note: if the skill is not listed immediately, restart the agent session."
+Write-Host "      OpenChamber users: run 'OpenChamber: Restart API' or reload the VS Code window; do not kill the OpenCode backend process."

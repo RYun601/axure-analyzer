@@ -24,6 +24,8 @@
 
 OpenCode、Codex、Cursor、Gemini CLI 都会读取 `~/.agents/skills`，适合作为主副本。
 
+> 同一个 skill 只需安装一份。不要把同一份 skill 同时复制到多个全局目录；需要多端共用时，用 junction/symlink 指向主副本。安装脚本会自动清理依赖自带的 `SKILL.md`，避免被 OpenCode 当作额外技能。
+
 ### Windows
 
 ```powershell
