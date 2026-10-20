@@ -1,6 +1,6 @@
 # 主流 Agent 安装方式
 
-`axure-analyzer` 是标准 Agent Skill：一个目录，包含 `SKILL.md`、`scripts/`、`references/`。  
+`axure-analyzer` 是标准 Agent Skill：一个目录，包含 `SKILL.md`、`scripts/`、`references/`。
 不同 Agent 的 skill 发现路径不同，但安装方式都是“把整个目录放到它的 skills 根目录”。
 
 > 本仓库目前是单 skill，没有发布插件市场。下面的安装方式以 Agent Skills 目录为主；需要 `/plugin install` 的市场安装需要额外发布插件清单。
